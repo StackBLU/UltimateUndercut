@@ -3,7 +3,7 @@ Intelligently undercuts your retainer listings!
 Skips the “1 gil troll” and ignores unrealistic highs, using recent market and sales data to pick a sane top-of-list price.  
 
 ### Requirements
-Something Need Doing (SND) — https://github.com/Jaksuhn/SomethingNeedDoing
+Something Need Doing (SND) - https://github.com/Jaksuhn/SomethingNeedDoing
 
 ### Installation  
 Use this URL when importing into SND to enable auto-updates:  
