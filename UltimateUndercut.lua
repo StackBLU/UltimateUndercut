@@ -2,7 +2,7 @@
 [[SND Metadata]]
 author: Stack
 version: 2.0.0
-description: Intelligently undercuts your retainer listings!
+description: Intelligently undercuts your retainer listings! https://github.com/StackBLU
 
 [[End Metadata]]
 --]=====]
