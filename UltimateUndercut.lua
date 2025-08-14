@@ -2,7 +2,7 @@
 [[SND Metadata]]
 author: Stack
 version: 2.0.0
-description: Automatically adjusts retainer item prices using smart market analysis
+description: Intelligently undercuts your retainer listings!
 
 [[End Metadata]]
 --]=====]
