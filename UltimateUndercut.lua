@@ -1,9 +1,11 @@
---[[
-Ultimate Undercut
-Author: Stack
-Version: 2.0
-Description: Automatically adjusts retainer item prices using smart market analysis
---]]
+--[=====[
+[[SND Metadata]]
+author: Stack
+version: 2.0.0
+description: Automatically adjusts retainer item prices using smart market analysis
+
+[[End Metadata]]
+--]=====]
 
 ---
 
