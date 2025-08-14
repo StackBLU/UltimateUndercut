@@ -136,17 +136,12 @@ end
 
 function ReadOpenItem()
     lastItem = openItem
-    openItem = ""
-    for i = 1, 10 do
-        if openItem == "" then
-            rawText = GetNodeText("RetainerSell", table.unpack(nodeRetainerSellItemName))
-            cleanedText = string.gsub(rawText, "%W", "")
-            if string.len(cleanedText) > 3 then
-                openItem = string.sub(cleanedText, 1, -1)
-            else
-                openItem = cleanedText
-            end
-        end
+    rawText = GetNodeText("RetainerSell", table.unpack(nodeRetainerSellItemName))
+    cleanedText = string.gsub(rawText, "%W", "")
+    if string.len(cleanedText) > 3 then
+        openItem = string.sub(cleanedText, 1, -1)
+    else
+        openItem = cleanedText
     end
 end
 
