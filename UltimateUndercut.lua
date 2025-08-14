@@ -9,10 +9,6 @@ description: Intelligently undercuts your retainer listings!
 
 ---
 
-undercutAmount = 1
-
----
-
 local nodeRetainerListBase = {1, 27}
 local nodeRetainerListRetainerSlots = {4, 41001, 41002, 41003, 41004, 41005, 41006, 41007, 41008, 41009}
 local nodeRetainerListRetainerName = {2, 3}
@@ -53,19 +49,24 @@ local buttonItemSearchResultOpenHistory = {0}
 
 ---
 
+-- Numbers
+itemCount = 0
 nextRetainer = 0
+price = 0
 targetSaleSlot = 1
+totalItems = 0
 totalRetainers = 0
-retainersToRun = {}
+
+-- Strings
+currentPrice = ""
 lastItem = ""
 openItem = ""
-price = 0
-itemCount = 0
-totalItems = 0
+
+-- Tables/Arrays
 marketPrices = {}
+myRetainers = {}
+retainersToRun = {}
 salesHistory = {}
-fairPrice = 0
-currentPrice = ""
 
 ---
 
@@ -78,12 +79,9 @@ function GetNodeText(addon, ...)
 end
 
 function CountRetainers()
-    while not Addons.GetAddon("RetainerList").Ready do yield("/wait 0.1") end
-    totalRetainers = 0
-    retainersToRun = {}
-    myRetainers = {}
+    while not Addons.GetAddon("RetainerList").Ready do yield("/wait 0.1") end    
     for i, slotId in ipairs(nodeRetainerListRetainerSlots) do
-        retainerName = GetNodeText("RetainerList", nodeRetainerListBase[1], nodeRetainerListBase[2], slotId, nodeRetainerListRetainerName[1], nodeRetainerListRetainerName[2])
+        local retainerName = GetNodeText("RetainerList", nodeRetainerListBase[1], nodeRetainerListBase[2], slotId, nodeRetainerListRetainerName[1], nodeRetainerListRetainerName[2])
         if retainerName ~= "" then
             totalRetainers = totalRetainers + 1
             retainersToRun[totalRetainers] = i
@@ -95,7 +93,7 @@ function CountRetainers()
 end
 
 function OpenRetainer(r)
-    yield("/echo [UU] Current Retainer: " .. myRetainers[nextRetainer])
+    yield("/echo [UU] Current Retainer (" .. nextRetainer .. "/" .. totalRetainers .. "): " .. myRetainers[nextRetainer])
     yield("/callback RetainerList true " .. buttonRetainerListSpecificRetainer[1] .. " " .. tostring(r - 1))
     while not Addons.GetAddon("SelectString").Ready do
         if Addons.GetAddon("Talk").Ready then yield("/callback Talk true 0") end
@@ -115,10 +113,8 @@ function CloseRetainer()
 end
 
 function CountItems()
-    while not Addons.GetAddon("RetainerSellList").Ready do yield("/wait 0.1") end
-    rawItemCount = GetNodeText("RetainerSellList", table.unpack(nodeRetainerSellListTotalItemsCount))
-    itemCountTrimmed = string.sub(rawItemCount, 1, 2)
-    itemCount = string.gsub(itemCountTrimmed, "%D", "")
+    local rawItemCount = GetNodeText("RetainerSellList", table.unpack(nodeRetainerSellListTotalItemsCount))
+    itemCount = string.gsub(string.sub(rawItemCount, 1, 2), "%D", "")
     return tonumber(itemCount) or 0
 end
 
@@ -138,11 +134,7 @@ function ReadOpenItem()
     lastItem = openItem
     rawText = GetNodeText("RetainerSell", table.unpack(nodeRetainerSellItemName))
     cleanedText = string.gsub(rawText, "%W", "")
-    if string.len(cleanedText) > 3 then
-        openItem = string.sub(cleanedText, 1, -1)
-    else
-        openItem = cleanedText
-    end
+	openItem = cleanedText
 end
 
 function OpenComparePriceWindow()
@@ -151,9 +143,9 @@ function OpenComparePriceWindow()
 end
 
 function ReadMarketPrices()
-    ready = false
-    searchWaitTick = 0
-    firstPrice = ""
+    local ready = false
+    local searchWaitTick = 0
+    local firstPrice = ""
     
     while not ready and searchWaitTick < 50 do
         searchWaitTick = searchWaitTick + 1
@@ -167,7 +159,7 @@ function ReadMarketPrices()
         end
     end
     
-    prices = {}
+    local prices = {}
     for i, slotId in ipairs(nodeItemSearchResultItemSlots) do
         if i > 20 then break end
         priceText = GetNodeText("ItemSearchResult", nodeItemSearchResultBase[1], nodeItemSearchResultBase[2], slotId, nodeItemSearchResultPrice[1])
@@ -188,7 +180,7 @@ function OpenSaleHistoryWindow()
 end
 
 function ReadSalesHistory()
-    sales = {}
+    local sales = {}
     for i, slotId in ipairs(nodeItemHistoryItemSlots) do
         if i > 20 then break end
         priceText = GetNodeText("ItemHistory", nodeItemHistoryBase[1], nodeItemHistoryBase[2], slotId, nodeItemHistoryPrice[1])
@@ -214,42 +206,40 @@ function CloseComparePriceWindow()
 end
 
 function FilterLowballListings(marketPrices, salesHistory)
-    if #marketPrices == 0 then return {} end
-    
-    local floorPrice = 1
-    if #salesHistory > 0 then
-        table.sort(salesHistory)
-        local salesMedian = salesHistory[math.ceil(#salesHistory / 2)]
-        floorPrice = math.max(1, math.floor(salesMedian * 0.3))
-    end
-    
-    table.sort(marketPrices)
-    local marketCopy = {}
-    for i, price in ipairs(marketPrices) do
-        table.insert(marketCopy, price)
-    end
-    
-    if #marketCopy >= 5 then
-        local percentile20Index = math.max(1, math.floor(#marketCopy * 0.2))
-        local marketFloor = marketCopy[percentile20Index]
-        floorPrice = math.max(floorPrice, math.floor(marketFloor * 0.5))
-    end
-    
-    local filteredPrices = {}
-    for _, price in ipairs(marketPrices) do
-        if price >= floorPrice then
-            table.insert(filteredPrices, price)
-        end
-    end
-    
-    if #filteredPrices == 0 and #marketPrices > 0 then
-        local keepCount = math.max(1, math.floor(#marketPrices * 0.5))
-        for i = #marketPrices - keepCount + 1, #marketPrices do
-            table.insert(filteredPrices, marketPrices[i])
-        end
-    end
-    
-    return filteredPrices
+   local marketCount = #marketPrices
+   local salesCount = #salesHistory
+   
+   if marketCount == 0 then return {} end
+   
+   local floorPrice = 1
+   if salesCount > 0 then
+       table.sort(salesHistory)
+       local salesMedian = salesHistory[math.ceil(salesCount / 2)]
+       floorPrice = math.max(1, math.floor(salesMedian * 0.3))
+   end
+   
+   table.sort(marketPrices)
+   if marketCount >= 5 then
+       local percentile20Index = math.max(1, math.floor(marketCount * 0.2))
+       local marketFloor = marketPrices[percentile20Index]
+       floorPrice = math.max(floorPrice, math.floor(marketFloor * 0.5))
+   end
+   
+   local filteredPrices = {}
+   for _, price in ipairs(marketPrices) do
+       if price >= floorPrice then
+           table.insert(filteredPrices, price)
+       end
+   end
+   
+   if #filteredPrices == 0 and marketCount > 0 then
+       local keepCount = math.max(1, math.floor(marketCount * 0.5))
+       for i = marketCount - keepCount + 1, marketCount do
+           table.insert(filteredPrices, marketPrices[i])
+       end
+   end
+   
+   return filteredPrices
 end
 
 function CalculateTrimmedMean(prices)
@@ -284,9 +274,6 @@ function CalculateFairPrice(filteredPrices, salesHistory)
         return CalculateTrimmedMean(salesHistory)
     end
     
-    table.sort(salesHistory)
-    table.sort(filteredPrices)
-    
     local salesValue = CalculateTrimmedMean(salesHistory)
     local marketValue = CalculateTrimmedMean(filteredPrices)
     
@@ -304,33 +291,25 @@ function DetermineNewPrice(filteredPrices, fairPrice)
     table.sort(filteredPrices)
     local cheapest = filteredPrices[1]
     
+    local marketBasedPrice = math.max(1, cheapest - 1)
+    
     if isLowValue then
         local reasonableFloor = math.max(1, math.floor(fairPrice * 0.4))
         
         if cheapest >= reasonableFloor then
-            return math.max(reasonableFloor, cheapest - 1)
+            return math.max(reasonableFloor, marketBasedPrice)
         else
-            return math.floor(reasonableFloor * 1.1)
+            return math.max(marketBasedPrice, math.floor(reasonableFloor * 1.1))
         end
     else
         local lowerBound = math.floor(fairPrice * 0.7)
         local upperBound = math.floor(fairPrice * 1.1)
         
-        if cheapest >= lowerBound and cheapest <= upperBound then
-            local newPrice = math.max(1, cheapest - 1)
-            return math.max(lowerBound, newPrice)
-        end
-        
-        if cheapest < lowerBound then
-            return lowerBound
-        end
-        
-        local newPrice = math.max(1, cheapest - 1)
-        return math.max(lowerBound, math.min(newPrice, upperBound))
+        return math.max(marketBasedPrice, math.min(lowerBound, upperBound))
     end
 end
 
-function CalculatePrice(marketPrices, salesHistory, undercutAmount)
+function CalculatePrice(marketPrices, salesHistory)
     local filteredPrices = FilterLowballListings(marketPrices, salesHistory)
     local fairPrice = CalculateFairPrice(filteredPrices, salesHistory)
     return DetermineNewPrice(filteredPrices, fairPrice)
@@ -349,6 +328,8 @@ function CloseSales()
         yield("/wait 0.1")
     end
 end
+
+--- Script actually starts here
 
 if Addons.GetAddon("RetainerList").Ready then
     CountRetainers()
@@ -393,7 +374,7 @@ OpenSaleHistoryWindow()
 salesHistory = ReadSalesHistory()
 CloseSaleHistoryWindow()
 
-price = CalculatePrice(marketPrices, salesHistory, 1)
+price = CalculatePrice(marketPrices, salesHistory)
 
 ::Apply::
 if price ~= tonumber(currentPrice) then
@@ -418,4 +399,4 @@ CloseRetainer()
 goto NextRetainer
 
 ::EndOfScript::
-yield("/echo Ultimate Undercut completed!")
+yield("/echo Ultimate Undercut completed successfully!")
