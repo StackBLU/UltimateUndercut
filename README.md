@@ -1,5 +1,5 @@
 # UltimateUndercut
-Intelligently undercuts your retainer listings!
+Intelligently undercuts your retainer listings!  
 Skips the “1 gil troll” and ignores unrealistic highs, using recent market and sales data to pick a sane top-of-list price.  
 
 ### Requirements
