@@ -93,6 +93,7 @@ price = 0
 targetSaleSlot = 1
 totalItems = 0
 totalRetainers = 0
+totalProcessed = 0
 itemWasReturned = false
 
 -- Strings
@@ -436,6 +437,7 @@ CloseSaleHistoryWindow()
 price = CalculatePrice(marketPrices, salesHistory)
 
 ::Apply::
+totalProcessed = totalProcessed + 1
 if price < priceToReturn and tonumber(itemQuantity) < quantityCheck then
     yield("/echo " .. scriptTag .. " " .. openItem .. ": " .. (currentPrice ~= "" and currentPrice or "unknown") .. " -> Returned")
     table.insert(returnedItems, {itemName = openItem, wouldBePrice = price})
@@ -469,6 +471,8 @@ CloseRetainer()
 goto NextRetainer
 
 ::EndOfScript::
+yield("/echo " .. scriptTag .. " Total items processed: " .. totalProcessed)
+
 if #returnedItems > 0 then
     yield("/echo " .. scriptTag .. " Items returned to inventory:")
     for _, item in ipairs(returnedItems) do
