@@ -10,7 +10,7 @@ Something Need Doing (SND) - https://github.com/Jaksuhn/SomethingNeedDoing
 
 ### Installation  
 Use this URL when importing into SND to enable auto-updates:  
-`https://github.com/StackBLU/UltimateUndercut/blob/main/UltimateUndercut.lua`
+`https://github.com/StackBLU/UltimateUndercut/blob/main/UltimateUndercut.lua`  
 `https://github.com/StackBLU/UltimateUndercut/blob/main/BlacklistPurge.lua`
 
 ### UltimateUnder Usage  
